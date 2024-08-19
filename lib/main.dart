@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:localstorage/localstorage.dart';
 import 'package:odalvinoeventoapp/presentations/screens/home/car_shop.dart';
 import 'package:odalvinoeventoapp/presentations/screens/home/home.dart';
 import 'package:odalvinoeventoapp/presentations/screens/inicio.dart';
 
-void main() {
+late final ValueNotifier<String> carShopNotifier;
+
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await initLocalStorage();
+  
+
+  carShopNotifier = ValueNotifier(localStorage.getItem('carShop')?? '');
+
+  carShopNotifier.addListener((){
+
+    localStorage.setItem('carShop', carShopNotifier.value.toString());
+
+  });
+
   runApp(const MyApp());
 }
 

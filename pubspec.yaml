@@ -38,6 +38,9 @@ dependencies:
   ai_barcode_scanner: ^5.1.1+2
   permission_handler: ^11.3.1
   qr_code_scanner: ^1.0.1
+  flutter_pannable_rating_bar: ^2.7.2+1
+  localstorage: ^5.0.0
+  http: ^1.2.2
 
 
 
@@ -73,6 +76,9 @@ flutter:
     - lib/assets/carrito@2x.png
     - lib/assets/mas@2x.png
     - lib/assets/menos@2x.png
+    - lib/assets/estrella@2x.png
+    - lib/assets/estrelladorada@2x.png
+    - lib/assets/equis@2x.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

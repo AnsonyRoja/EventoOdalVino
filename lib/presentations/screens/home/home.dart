@@ -1,5 +1,10 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_pannable_rating_bar/flutter_pannable_rating_bar.dart';
+import 'package:localstorage/localstorage.dart';
+import 'package:odalvinoeventoapp/presentations/backend/get_products_http.dart';
 import 'package:odalvinoeventoapp/presentations/screens/home/hardcode_products.dart';
 import 'package:odalvinoeventoapp/presentations/screens/home/qr_scanner/qr_scanner.dart';
 
@@ -37,6 +42,13 @@ import 'package:odalvinoeventoapp/presentations/screens/home/qr_scanner/qr_scann
     });
   }
 
+void getProductsWines()async {
+
+
+await getAllProducts();
+
+
+}
 
   void addProductsToCar(index){
 
@@ -59,6 +71,11 @@ import 'package:odalvinoeventoapp/presentations/screens/home/qr_scanner/qr_scann
             return {};
           },);
 
+          if(carShopNew['quantity'] == 0){
+
+            return;
+          }
+
       if(carShopNew.isNotEmpty){
 
           setState(() {
@@ -70,13 +87,42 @@ import 'package:odalvinoeventoapp/presentations/screens/home/qr_scanner/qr_scann
         }else{
 
           carShop.add(itemsForCarShop);
-        }
-    
+        } 
+        
+        localStorage.setItem('carShop', jsonEncode(carShop));
+
+        var traerCarroLocalStorage = jsonDecode(localStorage.getItem('carShop')!);
+
+        print('Esto es el valor de traerCarroLocalStorage $traerCarroLocalStorage');
+
         print('Esto es el carshop en incremento $carShop');
 
 
+  }
+
+     void removeProductsToCar(index){
+
+
+          List getCarLocalStorage = jsonDecode(localStorage.getItem('carShop')!);
+
+
+              getCarLocalStorage.removeWhere((value){
+
+                 return value['id'] == index + 1; 
+
+              });
+
+
+          localStorage.setItem('carShop', jsonEncode(getCarLocalStorage));
+ 
+
+    
+        print('Esto es el carshop en eliminando ese producto $carShop');
+
 
   }
+
+
 
  void increaseQuantity(int index) {
   if (filteredProducts[index]['quantity'] >= 0 && filteredProducts[index]['quantity'] < filteredProducts[index]['stock'] ) {
@@ -86,21 +132,42 @@ import 'package:odalvinoeventoapp/presentations/screens/home/qr_scanner/qr_scann
       });
 
    }
-      
+
+      carShopNew =  carShop.firstWhere((value) {
+
+            return  value['product_id'] == index + 1;
+            
+          
+          },orElse: () {
+            return {};
+          },);
+
+    if(carShopNew.isNotEmpty){
+
+        carShopNew['quantity'] =  filteredProducts[index]['quantity'];
+
+    }
+   localStorage.setItem('carShop', jsonEncode(carShop));
+
+    var getCarritoLocal = localStorage.getItem('carShop');
+
+    print('Este es el localstorage del carrito $getCarritoLocal');
+
+    print('Esto es el carrito $carShop');
    
 
   }
 
   void decreaseQuantity(int index) {
-      Map<String, dynamic> itemsForCarShop =   {
-        'id':index +1 , 
-        'fecha': '06/07/2024',
-        'quantity': products[index]['quantity'],
-        'product_id': index + 1 ,
-        'precio': 23,
+//       Map<String, dynamic> itemsForCarShop =   {
+//         'id':index +1 , 
+//         'fecha': '06/07/2024',
+//         'quantity': products[index]['quantity'],
+//         'product_id': index + 1 ,
+//         'precio': 23,
         
 
-      };
+//       };
 
         carShopNew =  carShop.firstWhere((value) {
 
@@ -110,18 +177,18 @@ import 'package:odalvinoeventoapp/presentations/screens/home/qr_scanner/qr_scann
           },orElse: () {
             return {};
           },);
-print('Esto es el itemforcarShop $itemsForCarShop');
-       
+
+
 
 
     if(filteredProducts[index]['quantity'] <= 0){
       return;
     }
 
-    if(carShopNew['quantity'] <= 0){
+    // if(carShopNew['quantity'] <= 0){
 
-        return;
-    }
+    //     return;
+    // }
 
 
 
@@ -133,20 +200,28 @@ print('Esto es el itemforcarShop $itemsForCarShop');
 
             carShopNew['quantity'] =  filteredProducts[index]['quantity'];
 
-        }else{
-
-          carShop.add(itemsForCarShop);
         }
       
     });
-    print('Esto es el carshop en decrease $carShop');
 
+    localStorage.setItem('carShop', jsonEncode(carShop));
+
+    print('Esto es el carshop en decrease $carShop');
     
   }
 
 
   @override
   void initState() {
+
+    getProductsWines();
+    
+    // localStorage.clear();
+  
+    var setearLocal = localStorage.getItem('carShop');
+  
+    print('Esto es el valor del local Storage $setearLocal');
+
     filteredProducts = products;
     super.initState();
   }
@@ -219,10 +294,9 @@ print('Esto es el itemforcarShop $itemsForCarShop');
                                   setState(() {
                                     searchBarController.text = barCode;
                                    filteredProduct();
-                  
                                   });
                                 }
-                                } ,
+                                },
                                 child: Image.asset('lib/assets/QR.png')),
                             ),
                           ],
@@ -290,89 +364,272 @@ print('Esto es el itemforcarShop $itemsForCarShop');
                                     builder: (BuildContext context, setStates) {
                                       return  
                                  Container(
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       color: Colors.white,
-                                       borderRadius: BorderRadius.circular(35),
+                                       borderRadius: BorderRadius.only(topLeft:  Radius.circular(35), topRight: Radius.circular(35)),
                                     ),
                                     width: double.infinity,
                                     height: heightScreen * 0.5,
-                                  child: Column(
-                                    children: [
-                                      SizedBox(height: heightScreen * 0.02,),
-                                      Container(
-
-                                        width: mediaScreen * 0.3,
-                                        height: 5,
-                                        decoration: BoxDecoration(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        borderRadius: BorderRadius.circular(15)
-                                        
-                                        ) ,
-
-                                      ),
-
-                                      Row(children: [
-                                        SizedBox(height: heightScreen * 0.3,),
-
-                                       Image.asset(products[index]['url_photo'], width: mediaScreen * 0.5,) ,
-                                       Container(
-                                        width: mediaScreen * 0.5,
-                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                           children: [
-                                             Text(filteredProducts[index]['name'], style: const TextStyle(fontFamily: 'Neuton Regular', fontSize: 20, color: Color(0XFF053452)),),
-                                             Text(filteredProducts[index]['cat'], style: const TextStyle(fontFamily: 'Neuton Regular', fontSize: 20, color: Color(0XFF053452)),),
-                                             Text('R \$${filteredProducts[index]['price']}', style: const TextStyle(fontSize: 25,fontFamily: 'AlegreyaSans Bold', color: Color(0XFF053452)),),
-                                             
-                                             SizedBox(height: heightScreen * 0.03 ,),
-                                              Row(
-                                                                             children: [
-                                                                               
-                                              GestureDetector(
-                                                  onTap: () {
-                                                    setStates(() {
-                                                
-                                                      decreaseQuantity(index);
-                                                
-                                                    },);
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.vertical,
+                                    child: Column(
+                                      children: [
+                                        SizedBox(height: heightScreen * 0.02,),
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Container(
                                                                               
-                                                  },
-                                              child: Image.asset('lib/assets/menos@2x.png', width: 25,)),
-                                                                           const SizedBox(width: 5,),
-
-                                                                               Padding(
-                                          padding: const EdgeInsets.only(bottom: 4.3),
-                                          child: Text('${filteredProducts[index]['quantity']}', style: const TextStyle( fontSize: 20 , fontFamily: 'Neuton Regular'),),
-                                                                               ),
-                                          const SizedBox(width: 5,),
-                                            GestureDetector(
-                                              onTap: () {
-                                         
-                                            setStates(() {
-                                              
-                                              increaseQuantity(index);
-                                            },);
-                                         
-                                              },
-                                              child: Image.asset('lib/assets/mas@2x.png', width: 25,)),
-                                            const SizedBox(width: 20,),
-                                            GestureDetector(
-                                              onTap: () {
-                                               
-                                                addProductsToCar(index);
-        
-                                              } ,
-                                              child: Image.asset('lib/assets/carrito@2x.png', width: 25,)),
+                                            width: mediaScreen * 0.3,
+                                            height: 5.5,
+                                            decoration: BoxDecoration(
+                                            color: Colors.grey.withOpacity(0.5),
+                                            borderRadius: BorderRadius.circular(15)
                                             
-                    
-                                          ],)
-        
-                                           ],
-                                         ),
-                                       )
+                                            ) ,
+                                                                              
+                                          ),
+                                        ),
+                                    
+                                        Row(children: [
+                                          SizedBox(height: heightScreen * 0.3,),
+                                    
+                                         Image.asset(products[index]['url_photo'], width: mediaScreen * 0.5,) ,
+                                         Container(
+                                          width: mediaScreen * 0.5,
+                                           child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                             children: [
+                                               Text(filteredProducts[index]['name'], style: const TextStyle(fontFamily: 'Neuton Regular', fontSize: 20, color: Color(0XFF053452)),),
+                                               Text(filteredProducts[index]['cat'], style: const TextStyle(fontFamily: 'Neuton Regular', fontSize: 20, color: Color(0XFF053452)),),
+                                               Text('R \$${filteredProducts[index]['price']}', style: const TextStyle(fontSize: 25,fontFamily: 'AlegreyaSans Bold', color: Color(0XFF053452)),),
+                                               
+                                               SizedBox(height: heightScreen * 0.03 ,),
+                                                Row(
+                                                
+                                                children: [
+                                    
+                                                GestureDetector(
+                                                    onTap: () {
+                                                      setStates(() {
+                                                  
+                                                        decreaseQuantity(index);
+                                                  
+                                                      },);
+                                                                                
+                                                    },
+                                                child: Image.asset('lib/assets/menos@2x.png', width: 25,)),
+                                                                             const SizedBox(width: 5,),
+                                    
+                                                                                 Padding(
+                                            padding: const EdgeInsets.only(bottom: 4.3),
+                                            child: Text('${filteredProducts[index]['quantity']}', style: const TextStyle( fontSize: 20 , fontFamily: 'Neuton Regular'),),
+                                                                                 ),
+                                            const SizedBox(width: 5,),
+                                              GestureDetector(
+                                                onTap: () {
+                                           
+                                              setStates(() {
+                                                
+                                                increaseQuantity(index);
+                                              },);
+                                           
+                                                },
+                                              child: Image.asset('lib/assets/mas@2x.png', width: 25,)),
+                                              const SizedBox(width: 20,),
+                                              GestureDetector(
+                                                onTap: () {
+                                                 
+                                                  addProductsToCar(index);
+                                            
+                                                } ,
+                                                child: Image.asset('lib/assets/carrito@2x.png', width: 25,)),
+                                    
+                                                            
+                                                ],),
+                                    
+                                    
+                                    
+                                    
+                                            
+                                             ],
+                                           ),
+                                         )
+                                    
+                                        ],),
+                                                Padding(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20,),
+                                                  child: Column(
+                                                    children: [
+                                                      Row(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          const Text('Qualificação:', style: TextStyle(fontFamily: 'Neuton Bold', color: Color(0XFF053452)),),
+                                                          SizedBox(width: mediaScreen *0.02,),
+                                                          PannableRatingBar( onChanged: (value) {
+                                                          
+                                                            setStates((){
+                                                      
+                                                            filteredProducts[index]['qualifer'] = value;
+                                                            
+                                                            });
+                                                            print('Valor de la calificacion ${filteredProducts[index]['qualifer']} ');
+                                                          } ,rate: double.parse(filteredProducts[index]['qualifer'].toString()), items: List.generate(5, (inde) =>  RatingWidget(
+                                                          selectedColor: const Color.fromARGB(255, 163, 148, 17),
+                                                          unSelectedColor: Colors.grey,
+                                                          child: 
+                                                            Image.asset('lib/assets/estrelladorada@2x.png', width: 20,)
+                                                          )))
+                                                        ],
+                                                      ),
+                                                      SizedBox(height: heightScreen * 0.01,),
+                                                        Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: RichText(
+                                                              text: TextSpan(
+                                                                children: [
+                                                                  const TextSpan(
+                                                                    text: 'Localização do vinhedo: ',
+                                                                    style: TextStyle(
+                                                                      fontFamily: 'Neuton Bold',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                  TextSpan(
+                                                                    text: filteredProducts[index]['localizacion'],
+                                                                    style: const TextStyle(
+                                                                      fontFamily: 'Neuton Regular',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    SizedBox(height: heightScreen * 0.01,),
 
-                                      ],),
-                                    ],
+                                                        Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: RichText(
+                                                              text: TextSpan(
+                                                                children: [
+                                                                  const TextSpan(
+                                                                    text: 'Ano de plantio: ',
+                                                                    style: TextStyle(
+                                                                      fontFamily: 'Neuton Bold',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                  TextSpan(
+                                                                    text: filteredProducts[index]['ano_de_plantio'].toString(),
+                                                                    style: const TextStyle(
+                                                                      fontFamily: 'Neuton Regular',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      SizedBox(height: heightScreen * 0.01,),
+
+                                                       Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: RichText(
+                                                              text: TextSpan(
+                                                                children: [
+                                                                  const TextSpan(
+                                                                    text: 'Tipo de solo: ',
+                                                                    style: TextStyle(
+                                                                      fontFamily: 'Neuton Bold',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                  TextSpan(
+                                                                    text: filteredProducts[index]['tipo_de_solo'],
+                                                                    style: const TextStyle(
+                                                                      fontFamily: 'Neuton Regular',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      SizedBox(height: heightScreen * 0.01,),
+
+                                                        Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: RichText(
+                                                              text: TextSpan(
+                                                                children: [
+                                                                  const TextSpan(
+                                                                    text: 'Produção: ',
+                                                                    style: TextStyle(
+                                                                      fontFamily: 'Neuton Bold',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                  TextSpan(
+                                                                    text: filteredProducts[index]['localizacion'],
+                                                                    style: const TextStyle(
+                                                                      fontFamily: 'Neuton Regular',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                        SizedBox(height: heightScreen * 0.01,),
+
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: RichText(
+                                                              text: TextSpan(
+                                                                children: [
+                                                                  const TextSpan(
+                                                                    text: 'Altura: ',
+                                                                    style: TextStyle(
+                                                                      fontFamily: 'Neuton Bold',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                  TextSpan(
+                                                                    text: filteredProducts[index]['altura'],
+                                                                    style: const TextStyle(
+                                                                      fontFamily: 'Neuton Regular',
+                                                                      color: Color(0XFF053452),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                    
+                                                      SizedBox(height: heightScreen * 0.01,),
+                                    
+                                                    ],
+                                                  ),
+                                                ),
+                                      ],
+                                    ),
                                   ),
                                 );
 
@@ -501,7 +758,9 @@ print('Esto es el itemforcarShop $itemsForCarShop');
                                   isSelectedHomeModule = true;
                                   isSelectedCarShopingModule = false;
                                 });
-                          Navigator.pushNamed(context, '/home');
+
+                            Navigator.pushNamedAndRemoveUntil(context, '/home', (Route<dynamic> route)=> false, arguments: 0);
+                            // Navigator.pushNamed(context,  '/home');
 
                             }, child: Image.asset('lib/assets/home@2x.png', width: 50, color: isSelectedHomeModule ? const Color(0xFF053452): Colors.grey,),),
                         ),
@@ -514,7 +773,14 @@ print('Esto es el itemforcarShop $itemsForCarShop');
                                   isSelectedHomeModule = false;
                                   isSelectedCarShopingModule = true;
                                 });
-                          Navigator.pushNamed(context, '/car-shop');
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/car-shop',
+                            (Route<dynamic> route) => false,
+                            arguments: 0,
+                          );
+                          //  Navigator.pushNamed(context,  '/car-shop');
+
                           },
 
                           child: Image.asset('lib/assets/carrito@2x.png', width: 50, color: isSelectedCarShopingModule ? const Color(0xFF053452) : Colors.grey,),
