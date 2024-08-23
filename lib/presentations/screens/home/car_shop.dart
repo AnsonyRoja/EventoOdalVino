@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
-import 'package:odalvinoeventoapp/presentations/screens/home/hardcode_products.dart';
 
 
 
@@ -26,6 +25,121 @@ import 'package:odalvinoeventoapp/presentations/screens/home/hardcode_products.d
     bool isSelectedCarShopingModule = true; 
     dynamic carShop = [];
 
+     void removeProduct(int index){
+
+
+
+        carShop.removeAt(index);
+
+           localStorage.setItem('carShop', jsonEncode(carShop));
+
+            
+
+
+      calculateTotalCars();
+        setState(() {
+          
+        });
+
+     }
+
+     void increaseQuantity(int index) {
+
+  print('Este es el valor de index $index');
+    print('Este es el valor del producto ${carShop[index]}');
+
+    int qty = int.parse(carShop[index]['quantity'].toString());
+    double stock = double.parse(carShop[index]['stock'].toString() == '{@nil: true}'?  "0" : carShop[index]['stock'].toString());
+
+  if (qty >= 0 && qty < stock) {
+    
+      setState(() {
+       carShop[index]['quantity']++;
+        
+      });
+
+    
+
+   }
+
+     dynamic carShopNew =  carShop.firstWhere((value) {
+
+            return  value['m_product_id'] == index + 1;
+            
+          
+          },orElse: () {
+            return {};
+          },);
+
+    if(carShopNew.isNotEmpty){
+
+        carShopNew['quantity'] =  carShop[index]['quantity'];
+
+    }
+   localStorage.setItem('carShop', jsonEncode(carShop));
+
+    var getCarritoLocal = localStorage.getItem('carShop');
+
+    print('Este es el localstorage del carrito $getCarritoLocal');
+
+    print('Esto es el carrito $carShop');
+   
+
+  }
+
+  void decreaseQuantity(int index) {
+//       Map<String, dynamic> itemsForCarShop =   {
+//         'id':index +1 , 
+//         'fecha': '06/07/2024',
+//         'quantity': products[index]['quantity'],
+//         'product_id': index + 1 ,
+//         'precio': 23,
+        
+
+//       };
+
+       var carShopNew =  carShop.firstWhere((value) {
+
+            return  value['product_id'] == index + 1;
+            
+          
+          },orElse: () {
+            return {};
+          },);
+
+
+
+
+    if(carShop[index]['quantity'] <= 1){
+      return;
+    }
+
+    // if(carShopNew['quantity'] <= 0){
+
+    //     return;
+    // }
+
+
+
+    setState(() {
+
+        carShop[index]['quantity']--;
+
+         if(carShopNew.isNotEmpty){
+
+            carShopNew['quantity'] =  carShop[index]['quantity'];
+
+        }
+      
+    });
+
+    localStorage.setItem('carShop', jsonEncode(carShop));
+
+    print('Esto es el carshop en decrease $carShop');
+    
+  }
+
+
 
   double calculateTotalCars(){
 
@@ -33,7 +147,7 @@ import 'package:odalvinoeventoapp/presentations/screens/home/hardcode_products.d
 
     for(var i = 0;  i < carShop.length; i++){
 
-        total += carShop[i]['quantity'] * carShop[i]['precio'];
+        total += double.parse(carShop[i]['quantity'].toString()) * double.parse(carShop[i]['precio'].toString());
 
     }
 
@@ -109,7 +223,7 @@ import 'package:odalvinoeventoapp/presentations/screens/home/hardcode_products.d
                            ) ,
                
                            body: Center(
-                child: Container(
+                child: SizedBox(
                   width: mediaScreen,
                   child: Column(
 
@@ -134,67 +248,79 @@ import 'package:odalvinoeventoapp/presentations/screens/home/hardcode_products.d
                                     color: Colors.white,
                                 
                                   ),
-                                  child: Row(
-                                      children: [
-                                            SizedBox(width: mediaScreen * 0.03,),
-                                            Image.asset(products[index]['url_photo'],),
-                                            Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: 0.0,vertical: 8),
-                                              child: Container(
-                                                width: mediaScreen * 0.36 ,
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                
-                                                      Text(products[index]['name'], style: const TextStyle(fontSize: 13,fontFamily: 'Neuton Regular', color: Color(0XFF053452) ), ),
-                                                      Text(products[index]['cat'], style: const TextStyle(fontSize: 11,fontFamily: 'Neuton Regular', color: Color(0XFFB47C2D)),),
-                                                  ],
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                        children: [
+                                              SizedBox(width: mediaScreen * 0.03,),
+                                              Image.asset(carShop[index]['image_url'].toString() == '{@nil: true}' ? 'lib/assets/vino1.jpg': carShop[index]['image_url'].toString(),),
+                                              Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 0.0,vertical: 8),
+                                                child: SizedBox(
+                                                  width: mediaScreen * 0.25 ,
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                    
+                                                          Text(carShop[index]['product_name'], style: const TextStyle(fontSize: 13,fontFamily: 'Neuton Regular', color: Color(0XFF053452) ), ),
+                                                          Text(carShop[index]['product_brand'], style: const TextStyle(fontSize: 11,fontFamily: 'Neuton Regular', color: Color(0XFFB47C2D)),),
+                                                      ],
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                                        Row(
-                                                  
-                                                  children: [
-                                      
+                                                          Row(
+                                                    
+                                                    children: [
+                                        
+                                                    GestureDetector(
+                                                        onTap: () {
+                                                          setState(() {
+                                                      
+                                                            decreaseQuantity(index);
+                                                      
+                                                          },);
+                                                                                    
+                                                        },
+                                                    child: Image.asset('lib/assets/menos@2x.png', width: 15,)),
+                                                                                 const SizedBox(width: 5,),
+                                        
+                                                                                     Padding(
+                                                padding: const EdgeInsets.only(bottom: 4.3),
+                                                child: Text('${carShop[index]['quantity']}', style: const TextStyle( fontSize: 15 , fontFamily: 'Neuton Regular'),),
+                                                                                     ),
+                                                const SizedBox(width: 5,),
                                                   GestureDetector(
-                                                      onTap: () {
-                                                        setState(() {
+                                                    onTap: () {
+                                               
+                                                  setState(() {
                                                     
-                                                          // decreaseQuantity(index);
-                                                    
-                                                        },);
-                                                                                  
-                                                      },
-                                                  child: Image.asset('lib/assets/menos@2x.png', width: 15,)),
-                                                                               const SizedBox(width: 5,),
-                                      
-                                                                                   Padding(
-                                              padding: const EdgeInsets.only(bottom: 4.3),
-                                              child: Text('${carShop[index]['quantity']}', style: const TextStyle( fontSize: 15 , fontFamily: 'Neuton Regular'),),
-                                                                                   ),
-                                              const SizedBox(width: 5,),
-                                                GestureDetector(
-                                                  onTap: () {
-                                             
-                                                setState(() {
-                                                  
-                                                  // increaseQuantity(index);
-                                
-                                                },);
-                                             
-                                                  },
-                                                child: Image.asset('lib/assets/mas@2x.png', width: 15,)),
-                                                const SizedBox(width: 13,),
-                                
-                                                Text('R \$${carShop[index]['precio'].toString()}', style: const TextStyle(fontFamily: 'AlegreyaSans Bold'),),
-                                                const SizedBox(width: 13,),
-                                
-                                                Image.asset('lib/assets/equis@2x.png', width: 15,),
-                                                              
-                                                ],),
-                                  
-                                      ],
-                                  
+                                                    increaseQuantity(index);
+                                                                    
+                                                  },);
+                                               
+                                                    },
+                                                  child: Image.asset('lib/assets/mas@2x.png', width: 15,)),
+                                                  const SizedBox(width: 13,),
+                                                                    
+                                                  Text('\$${carShop[index]['precio'].toString()}', style: const TextStyle(fontFamily: 'AlegreyaSans Bold'),),
+                                                  const SizedBox(width: 13,),
+                                                                    
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      setState(() {
+                                                      removeProduct(index);  
+                                                        
+                                                      });
+                                                    } ,
+                                                    child: Image.asset('lib/assets/equis@2x.png', width: 15,)),
+                                                                
+                                                  ],),
+                                    
+                                        ],
+                                    
+                                    ),
                                   ) ,
                                 ),
                               );
@@ -203,10 +329,10 @@ import 'package:odalvinoeventoapp/presentations/screens/home/hardcode_products.d
 
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text('Total: R \$${calculateTotalCars()}', style: const TextStyle(  fontSize: 25,fontFamily: 'AlegreyaSans Bold' ,color: Colors.white, ),),
+                          child: Text('Total: \$${calculateTotalCars()}', style: const TextStyle(  fontSize: 25,fontFamily: 'AlegreyaSans Bold' ,color: Colors.white, ),),
                         ),
 
-                        Container(
+                        SizedBox(
                           width: mediaScreen,
                           child: ElevatedButton(
                             style: const ButtonStyle(

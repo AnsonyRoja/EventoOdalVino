@@ -41,6 +41,7 @@ dependencies:
   flutter_pannable_rating_bar: ^2.7.2+1
   localstorage: ^5.0.0
   http: ^1.2.2
+  intl: ^0.19.0
 
 
 
