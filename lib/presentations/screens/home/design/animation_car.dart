@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 
 class AnimatedShoppingCart extends StatefulWidget {
   final bool isSelectedCarShopingModule;
-
-  const AnimatedShoppingCart({super.key, required this.isSelectedCarShopingModule});
+  const AnimatedShoppingCart({super.key ,required this.isSelectedCarShopingModule});
 
   @override
   AnimatedShoppingCartState createState() => AnimatedShoppingCartState();

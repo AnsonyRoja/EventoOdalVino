@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:odalvinoeventoapp/presentations/screens/home/car_shop.dart';
 import 'package:odalvinoeventoapp/presentations/screens/home/home.dart';
+import 'package:odalvinoeventoapp/presentations/screens/home/providers/product_provider.dart';
 import 'package:odalvinoeventoapp/presentations/screens/inicio.dart';
+import 'package:provider/provider.dart';
 
 late final ValueNotifier<String> carShopNotifier;
 
@@ -15,11 +17,15 @@ void main() async{
 
   carShopNotifier.addListener((){
 
-    localStorage.setItem('carShop', carShopNotifier.value.toString());
+    localStorage.setItem('carShop', "[]");
 
   });
 
-  runApp(const MyApp());
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_)=>ProductProvider())
+    ],
+    child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {

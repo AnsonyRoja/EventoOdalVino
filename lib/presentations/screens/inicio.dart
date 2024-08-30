@@ -1,9 +1,13 @@
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:localstorage/localstorage.dart';
+import 'package:odalvinoeventoapp/presentations/backend/peticiones_http/get_voucher_http.dart';
 import 'package:odalvinoeventoapp/presentations/screens/home/home.dart';
 import 'package:odalvinoeventoapp/presentations/screens/home/qr_scanner/qr_scanner.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class Presentations extends StatefulWidget {
@@ -28,9 +32,55 @@ class _PresentationsState extends State<Presentations> {
   }
 
 
+  void loadVoucher()async {
+
+
+                Directory supportDirectory = await getApplicationSupportDirectory();
+                  String filePathCoupon = '${supportDirectory.path}/.cupon';
+                  File configC = File(filePathCoupon);
+                String filePath = '${supportDirectory.path}/.env';
+
+                File configP = File(filePath);
+
+                try {
+                  
+
+                Map saveCoupon = jsonDecode(await configC.readAsString());
+                List headerOrder = jsonDecode(await configP.readAsString());
+                headerOrder.first['login'] == false;
+
+                Map thisCoupon = headerOrder.firstWhere((element) {
+
+                    return element['cupon'] == saveCoupon['cupon'];
+                  
+                },orElse: () {
+                 return {}; 
+                },);
+
+                print('este es el valor de cupon $saveCoupon');
+                  
+                print('este es el ultimo ${headerOrder} ');
+          if (thisCoupon['login'] == true) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>  HomeScreen(coupon: saveCoupon['cupon'],),
+              ),
+          );
+
+        }
+
+    } catch (e) {
+
+        print('Error no se pudo iniciar session: $e');
+
+    }
+}
+
   @override
   void initState() {
     _checkPermissions();
+    loadVoucher();
+    
 
     super.initState();
   }
@@ -151,24 +201,44 @@ class _PresentationsState extends State<Presentations> {
                       SizedBox(height: heightScreen * 0.1,),
                       ElevatedButton(
                         style: const ButtonStyle( backgroundColor: WidgetStatePropertyAll( Color(0XFF9FAADE)),  elevation: WidgetStatePropertyAll<double>(5),shadowColor: WidgetStatePropertyAll(Colors.black)   ),
-                        onPressed: () {
-                         if (cupon == couponController.text) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const HomeScreen(),
-                        ),
-                      );
-                    } else if (couponController.text != "") {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return const AlertDialog(
-                            title: Text('Error'),
-                            content: Text('Ocurrio un error al procesar su cupon'),
+                        onPressed: () async {
+                        dynamic response = await getVoucherHttp(couponController.text);
+
+                          if(response is String){
+                            
+                               await showDialog(
+                              context: context,
+                              builder: (context) {
+                                return const AlertDialog(
+                                  title: Text('Error'),
+                                  content: Text('Este cupom foi usado'),
+                                );
+                              },
+                            );
+                          }else if(response == false){
+
+                              await showDialog(
+                              context: context,
+                              builder: (context) {
+                                return const AlertDialog(
+                                  title: Text('Error'),
+                                  content: Text('Este Cupon no existe'),
+                                );
+                              },
+                            );
+
+                          }
+
+
+                         if (response == true) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>  HomeScreen(coupon: couponController.text,),
+                              ),
                           );
-                        },
-                      );
-                    }
+
+                            
+                    } 
                         
                       } , child: const Text('Aceitar', style: TextStyle(fontFamily: 'AlegreyaSans Bold', fontSize: 18, color: Colors.black),)),
 

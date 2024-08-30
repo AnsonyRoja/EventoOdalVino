@@ -1,8 +1,12 @@
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
+import 'package:odalvinoeventoapp/presentations/backend/idempiere/create_orden_sales.dart';
+import 'package:odalvinoeventoapp/presentations/screens/home/home.dart';
+import 'package:path_provider/path_provider.dart';
 
 
 
@@ -24,6 +28,8 @@ import 'package:localstorage/localstorage.dart';
     bool isSelectedHomeModule = false;
     bool isSelectedCarShopingModule = true; 
     dynamic carShop = [];
+    DateTime? dateIdempiere;
+    Map headerOrdMap = {};
 
      void removeProduct(int index){
 
@@ -32,8 +38,6 @@ import 'package:localstorage/localstorage.dart';
         carShop.removeAt(index);
 
            localStorage.setItem('carShop', jsonEncode(carShop));
-
-            
 
 
       calculateTotalCars();
@@ -143,6 +147,8 @@ import 'package:localstorage/localstorage.dart';
 
   double calculateTotalCars(){
 
+     
+
     double total = 0.0;
 
     for(var i = 0;  i < carShop.length; i++){
@@ -151,14 +157,49 @@ import 'package:localstorage/localstorage.dart';
 
     }
 
+    Future.delayed(const Duration(seconds: 2)).then((_){
+    setState(() {
+      
+    total = total - double.parse(headerOrdMap['amount'].toString() );
+    });
 
+    });
     return total;
+
+  }
+
+  void initHeaderOrderValue()async {
+
+     Directory supportDirectory = await getApplicationSupportDirectory();
+                          String filePath = '${supportDirectory.path}/.env';
+                          String filePathCoupon = '${supportDirectory.path}/.cupon';
+                          File configC = File(filePathCoupon);
+                          File configP = File(filePath);
+                          
+                          List headerOrder = jsonDecode(await configP.readAsString());
+
+                          Map cupon = jsonDecode(await configC.readAsString());
+                          setState(() {
+                           headerOrdMap = headerOrder.firstWhere(
+                            (value) => value['cupon'] == cupon['cupon'],
+                            orElse: () => {}, // Return null if the coupon is not found
+                          );
+                            
+                          });
 
   }
 
 
   @override
   void initState() {
+
+    initHeaderOrderValue();
+
+      setState(() {
+        dateIdempiere = DateTime.now();
+      });
+
+    
 
       var getCarshop = localStorage.getItem('carShop') ?? '';
 
@@ -236,7 +277,7 @@ import 'package:localstorage/localstorage.dart';
                             itemCount:carShop.length,                         
                             itemBuilder: (context, index) {
                               
-                              print('Esto es el producto del carrito ${carShop[index]}');
+                              // print('Esto es el producto del carrito ${carShop[index]}');
                               
                               return Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -314,7 +355,7 @@ import 'package:localstorage/localstorage.dart';
                                                         
                                                       });
                                                     } ,
-                                                    child: Image.asset('lib/assets/equis@2x.png', width: 15,)),
+                                                    child: Image.asset('lib/assets/equis@2x.png', width: 25,)),
                                                                 
                                                   ],),
                                     
@@ -339,7 +380,49 @@ import 'package:localstorage/localstorage.dart';
                               foregroundColor: WidgetStatePropertyAll(Colors.black),
                               backgroundColor:  WidgetStatePropertyAll(Color(0xFF9FAADE)) ,
                             ),
-                            onPressed: () {
+                            onPressed: () async {
+                            
+                        
+                          print('este es el header map $headerOrdMap');
+
+
+
+                            Map<String, dynamic> order = {
+
+                                  'header': {
+
+                                      'ad_client_id': headerOrdMap['ad_client_id'],
+                                      'ad_org_id': headerOrdMap['ad_org_id'],
+                                      'c_bpartner_id': headerOrdMap['c_bpartner_id'],
+                                      'c_bpartner_location_id' : headerOrdMap['c_bpartner_location_id'],
+                                      'c_currency_id': headerOrdMap['c_currency_id'],
+                                      'description': 'Evento Oda',
+                                      'c_conversiontype_id':'c_conversiontype_id',
+                                      'c_doctypetarget_id': '1000233',
+                                      'c_paymentterm_id': headerOrdMap['c_payment_term_id'],
+                                      'date_ordered': dateIdempiere,
+                                      'is_transferred': 'Y',
+                                      'm_pricelist_id': "1000007",
+                                      'payment_rule': 'M',
+                                      'grand_total': calculateTotalCars(),
+
+                                  },
+                                  'lines': carShop
+
+                            };
+
+
+                              createOrdenSalesIdempiere(order);
+
+                              print('Esta es la orden $order');
+
+                            // localStorage.setItem('carShop', '');
+
+                            // carShop.clear();
+                            // setState(() {
+                              
+                            // });
+
                             
                           }, child: const Text('Para Confirmar o pedido', style: TextStyle( fontSize: 15 ,fontFamily: 'AlegreyaSans Bold'),) ),
                         ),
@@ -379,14 +462,15 @@ import 'package:localstorage/localstorage.dart';
                                   isSelectedHomeModule = true;
                                   isSelectedCarShopingModule = false;
                                 });
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/home',
-                            (Route<dynamic> route) => false,
-                            arguments: 0,
-                          );
+                          // Navigator.pushNamedAndRemoveUntil(
+                          //   context,
+                          //   '/home',
+                          //   (Route<dynamic> route) => false,
+                          //   arguments: 0,
+                          // );
 
                           // Navigator.pushNamed(context, '/home');
+                          Navigator.push(context, MaterialPageRoute(builder:  (context) => const HomeScreen(), ) );
 
                             }, child: Image.asset('lib/assets/home@2x.png', width: 50, color: isSelectedHomeModule ? const Color(0xFF053452): Colors.grey,),),
                         ),
@@ -400,14 +484,15 @@ import 'package:localstorage/localstorage.dart';
                                   isSelectedCarShopingModule = true;
                                 });
                            
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/car-shop',
-                            (Route<dynamic> route) => false,
-                            arguments: 0,
-                          );
+                          // Navigator.pushNamedAndRemoveUntil(
+                          //   context,
+                          //   '/car-shop',
+                          //   (Route<dynamic> route) => false,
+                          //   arguments: 0,
+                          // );
 
                           // Navigator.pushNamed(context, '/car-shop');
+                          Navigator.push(context, MaterialPageRoute(builder: (context) =>  const CarShopScreen() , ));
 
                           },
                           child: Image.asset('lib/assets/carrito@2x.png', width: 50, color: isSelectedCarShopingModule ? const Color(0xFF053452) : Colors.grey,),
